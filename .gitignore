@@ -1,0 +1,5 @@
+
+# NodeJS stuff: building the exe for itch.io
+node_modules/
+dist/
+*.log
