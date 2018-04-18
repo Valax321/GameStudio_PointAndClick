@@ -1,0 +1,61 @@
+{ "columns":16,
+ "image":"..\/..\/assetsrc\/tilesets\/warzone.png",
+ "imageheight":512,
+ "imagewidth":512,
+ "margin":0,
+ "name":"warzone",
+ "spacing":0,
+ "terrains":[
+        {
+         "name":"Grass",
+         "tile":9
+        }, 
+        {
+         "name":"Dirt",
+         "tile":0
+        }],
+ "tilecount":256,
+ "tileheight":32,
+ "tiles":
+    {
+     "1":
+        {
+         "terrain":[0, 0, 1, 1]
+        },
+     "2":
+        {
+         "terrain":[1, 1, 0, 0]
+        },
+     "3":
+        {
+         "terrain":[1, 0, 1, 0]
+        },
+     "4":
+        {
+         "terrain":[0, 1, 0, 1]
+        },
+     "5":
+        {
+         "terrain":[1, 1, 1, 0]
+        },
+     "6":
+        {
+         "terrain":[1, 1, 0, 1]
+        },
+     "7":
+        {
+         "terrain":[0, 1, 1, 1]
+        },
+     "8":
+        {
+         "terrain":[1, 0, 1, 1]
+        },
+     "9":
+        {
+         "terrain":[0, 0, 0, 0]
+        }
+    },
+ "tilewidth":32,
+ "transparentcolor":"#0000ff",
+ "type":"tileset"
+}
