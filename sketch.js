@@ -72,6 +72,36 @@ const FS_YAW = 0;
 const FS_PITCH = 1;
 const FS_FIRING = 3;
 
+var deathScreams = [];
+
+class DeathImpact
+{
+    constructor(accuracy)
+    {
+        this.accuracy = accuracy;
+    }
+
+    doScream()
+    {
+        if (this.accuracy > 0.8)
+        {
+
+        }
+        else if (this.accuracy > 0.6)
+        {
+
+        }
+        else if (this.accuracy > 0.4)
+        {
+
+        }
+        else
+        {
+            
+        }
+    }
+}
+
 class Howitzer extends Interactable
 {
     constructor()
@@ -93,31 +123,37 @@ class Howitzer extends Interactable
 
         this.rotateSpeed = 10;
 
-        this.fireTimer = 1;
+        this.fireTimer = 7;
         this.currentFireTime = 0;
 
         //TODO: ADD MORE STATES TO THIS! Probably every 10 degrees
         this.sprites[0][0] = loadImage("assets/howitzer/h_5_normal.png");
-        this.sprites[0][1] = loadImage("assets/howitzer/h_20_normal.png");
-        this.sprites[0][2] = loadImage("assets/howitzer/h_35_normal.png");
-        this.sprites[0][3] = loadImage("assets/howitzer/h_60_normal.png");
+        this.sprites[0][1] = loadImage("assets/howitzer/h_10_normal.png");
+        this.sprites[0][2] = loadImage("assets/howitzer/h_20_normal.png");
+        this.sprites[0][3] = loadImage("assets/howitzer/h_30_normal.png");
+        this.sprites[0][4] = loadImage("assets/howitzer/h_40_normal.png");
+        this.sprites[0][5] = loadImage("assets/howitzer/h_50_normal.png");
+        this.sprites[0][6] = loadImage("assets/howitzer/h_60_normal.png");
 
         this.sprites[1][0] = loadImage("assets/howitzer/h_5_firing.png");
-        this.sprites[1][1] = loadImage("assets/howitzer/h_20_firing.png");
-        this.sprites[1][2] = loadImage("assets/howitzer/h_35_firing.png");
-        this.sprites[1][3] = loadImage("assets/howitzer/h_60_firing.png");
+        this.sprites[1][1] = loadImage("assets/howitzer/h_10_firing.png");
+        this.sprites[1][2] = loadImage("assets/howitzer/h_20_firing.png");
+        this.sprites[1][3] = loadImage("assets/howitzer/h_30_firing.png");
+        this.sprites[1][4] = loadImage("assets/howitzer/h_40_firing.png");
+        this.sprites[1][5] = loadImage("assets/howitzer/h_50_firing.png");
+        this.sprites[1][6] = loadImage("assets/howitzer/h_60_firing.png");
 
         this.shadowSprite = loadImage("assets/howitzer/h_shadow.png");
+
+        this.fireSound = loadSound("assets/sound/howy_fire.ogg");
+        this.fireSound.playMode('sustain');
 
         this.aimFont = loadFont("assets/fonts/icbmss25.ttf");
     }
 
     getFiringSpriteIndex()
     {
-        if (this.angle < 15) return 0;
-        if (this.angle < 27.5) return 1;
-        if (this.angle < 47.5) return 2;
-        else return 3;
+        return clamp(round(this.angle * 0.1), 0, 60);
     }
 
     mousePressed()
@@ -127,6 +163,8 @@ class Howitzer extends Interactable
         {
              this.firing = true;
              this.fireStage = FS_FIRING;
+             this.fireSound.play();
+             //I would spawn a cool smoke/muzzle effect here, but my 2D art skills are so bad I don't know how to make one.
         }
     }
 
@@ -156,7 +194,7 @@ class Howitzer extends Interactable
         {
             var mDist = mo.mag() / resolutionScale;
             var distScale = pow(clamp(mDist / this.maxPitchDistance, 0, 1), 2);
-            this.angle = lerp(5, 60, distScale);
+            this.angle = lerp(0, 60, distScale);
         }
         else if (this.fireStage == FS_FIRING)
         {
@@ -213,6 +251,11 @@ function preload()
 {
     howy = new Howitzer();
     bg = loadImage("assets/howitzer/h_background.png");
+
+    for (var i = 1; i < 13; i++)
+    {
+        deathScreams[i] = loadSound("assets/sound/c_scream_" + (i < 10 ? "0" + i : i) + ".ogg");
+    }
 }
 
 function setup()
