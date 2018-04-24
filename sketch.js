@@ -72,36 +72,6 @@ const FS_YAW = 0;
 const FS_PITCH = 1;
 const FS_FIRING = 3;
 
-var deathScreams = [];
-
-class DeathImpact
-{
-    constructor(accuracy)
-    {
-        this.accuracy = accuracy;
-    }
-
-    doScream()
-    {
-        if (this.accuracy > 0.8)
-        {
-
-        }
-        else if (this.accuracy > 0.6)
-        {
-
-        }
-        else if (this.accuracy > 0.4)
-        {
-
-        }
-        else
-        {
-            
-        }
-    }
-}
-
 class Howitzer extends Interactable
 {
     constructor()
@@ -126,6 +96,17 @@ class Howitzer extends Interactable
         this.fireTimer = 7;
         this.currentFireTime = 0;
 
+        this.hasScreamed = false;
+
+        this.pitchYaw = this.generateRandomPitchYawTarget();
+
+        this.killCount = 0;
+
+        this.countDownTimer = 60;
+
+        this.started = false;
+        this.done = false;
+
         //TODO: ADD MORE STATES TO THIS! Probably every 10 degrees
         this.sprites[0][0] = loadImage("assets/howitzer/h_5_normal.png");
         this.sprites[0][1] = loadImage("assets/howitzer/h_10_normal.png");
@@ -149,6 +130,20 @@ class Howitzer extends Interactable
         this.fireSound.playMode('sustain');
 
         this.aimFont = loadFont("assets/fonts/icbmss25.ttf");
+
+        this.closeHitScream = loadSound("assets/sound/scream_closehit1.ogg");
+        this.closeHitScream.setVolume(0.2);
+
+        this.midHitScream = loadSound("assets/sound/scream_midhit1.ogg");
+        this.midHitScream.setVolume(0.3);
+
+        this.farHitScream = loadSound("assets/sound/scream_farhit1.ogg");
+        this.farHitScream.setVolume(0.3);
+    }
+
+    generateRandomPitchYawTarget()
+    {
+        return {pitch: random(5, 60), yaw: random(-this.maxYaw, this.maxYaw)};
     }
 
     getFiringSpriteIndex()
@@ -158,6 +153,11 @@ class Howitzer extends Interactable
 
     mousePressed()
     {
+        if (!this.started)
+        {
+            this.started = true;
+            return;
+        }
         if (this.fireStage == FS_YAW) this.fireStage = FS_PITCH;
         else if (this.fireStage == FS_PITCH)
         {
@@ -177,43 +177,78 @@ class Howitzer extends Interactable
 
         var mo = createVector(mXo, mYo);
 
-        if (this.fireStage == FS_YAW)
+        if (getFrameRate() != 0 && this.started)
         {
-            if (getFrameRate() != 0) //HACK: p5 is so well made that getFrameRate() returns 0 on the first frame, meaning deltaTime() returns Infinity. It broke rotation by instantly setting yaw to Infinity too.
+            this.countDownTimer = clamp(this.countDownTimer - deltaTime(), 0, 1000);
+            if (this.countDownTimer <= 0)
             {
-                this.desiredYaw = clampAngle(degrees(mo.heading()) + 90, this.maxYaw, -this.maxYaw);
-                // Move the howitzer slowly.
-                var dyC = this.desiredYaw > 180 ? (360 - this.desiredYaw) * -1 : this.desiredYaw;
-                var yC = this.yaw > 180 ? 360 - this.yaw : this.yaw;
-                var dir = Math.sign(dyC - yC);
-                if (approx(dyC, yC, 0.1)) dir = 0; //Stop moving if we're pretty close.
-                this.yaw += this.rotateSpeed * dir * deltaTime()
+                this.done = true;
             }
         }
-        else if (this.fireStage == FS_PITCH)
-        {
-            var mDist = mo.mag() / resolutionScale;
-            var distScale = pow(clamp(mDist / this.maxPitchDistance, 0, 1), 2);
-            this.angle = lerp(0, 60, distScale);
-        }
-        else if (this.fireStage == FS_FIRING)
-        {
-            this.currentFireTime += deltaTime();
 
-            if (this.currentFireTime > 0.2)
-            {
-                this.firing = false;
-            }
-
-            if (this.currentFireTime >= this.fireTimer)
-            {
-                this.fireStage = FS_YAW;
-                this.currentFireTime = 0;
-            }
-        }
-        else
+        if (!this.done && this.started)
         {
-            console.log("Invalid fire stage on howitzer!");
+            if (this.fireStage == FS_YAW)
+            {
+                if (getFrameRate() != 0) //HACK: p5 is so well made that getFrameRate() returns 0 on the first frame, meaning deltaTime() returns Infinity. It broke rotation by instantly setting yaw to Infinity too.
+                {
+                    this.desiredYaw = clampAngle(degrees(mo.heading()) + 90, this.maxYaw, -this.maxYaw);
+                    // Move the howitzer slowly.
+                    var dyC = this.desiredYaw > 180 ? (360 - this.desiredYaw) * -1 : this.desiredYaw;
+                    var yC = this.yaw > 180 ? 360 - this.yaw : this.yaw;
+                    var dir = Math.sign(dyC - yC);
+                    if (approx(dyC, yC, 0.1)) dir = 0; //Stop moving if we're pretty close.
+                    this.yaw += this.rotateSpeed * dir * deltaTime()
+                }
+            }
+            else if (this.fireStage == FS_PITCH)
+            {
+                var mDist = mo.mag() / resolutionScale;
+                var distScale = pow(clamp(mDist / this.maxPitchDistance, 0, 1), 2);
+                this.angle = lerp(0, 60, distScale);
+            }
+            else if (this.fireStage == FS_FIRING)
+            {
+                this.currentFireTime += deltaTime();
+
+                if (this.currentFireTime > 0.2)
+                {
+                    this.firing = false;
+                }
+
+                if (this.currentFireTime > 2.9 && !this.hasScreamed)
+                {
+                    this.hasScreamed = true;
+                    var dist = createVector(this.yaw - this.pitchYaw.yaw, this.angle - this.pitchYaw.pitch).mag();
+                    if (dist < 1.5)
+                    {
+                        this.closeHitScream.play();
+                        this.killCount += round(random(4, 6));
+                    }
+                    else if (dist < 6)
+                    {
+                        this.midHitScream.play();
+                        this.killCount += round(random(2, 4));
+                    }
+                    else if (dist < 12)
+                    {
+                        this.farHitScream.play();
+                        this.killCount += round(random(1, 2));
+                    }
+                }
+
+                if (this.currentFireTime >= this.fireTimer)
+                {
+                    this.fireStage = FS_YAW;
+                    this.currentFireTime = 0;
+                    this.hasScreamed = false;
+                    this.pitchYaw = this.generateRandomPitchYawTarget();
+                }
+            }
+            else
+            {
+                console.log("Invalid fire stage on howitzer!");
+            }
         }
     }
 
@@ -230,9 +265,30 @@ class Howitzer extends Interactable
             fill(255);
             strokeWeight(1);
             stroke(0);
-            var mx = (mouseX / resolutionScale) + 10;
-            text("Yaw: " + this.yaw.toFixed(0), mx, mouseY / resolutionScale);
-            text("Pitch: " + this.angle.toFixed(0), mx, (mouseY / resolutionScale) - 15);
+            if (!this.started)
+            {
+                textAlign(CENTER);
+                text("Click to begin the barrage.", CANVAS_SIZE.x / 2, CANVAS_SIZE.y / 2);
+            }
+            else if (!this.done)
+            {
+                text("TIME: " + this.countDownTimer.toFixed(0), 30, 15);
+                text("TARGET ANGLES: " + this.pitchYaw.yaw.toFixed(0) + " " + this.pitchYaw.pitch.toFixed(0), 30, 30);
+                text("BODY COUNT: " + this.killCount, 30, 45);
+                var mx = (mouseX / resolutionScale) + 10;
+                text("Yaw: " + this.yaw.toFixed(0), mx, mouseY / resolutionScale);
+                text("Pitch: " + this.angle.toFixed(0), mx, (mouseY / resolutionScale) - 15);
+            }
+            else
+            {
+                textAlign(CENTER);
+                text("MILITARY KILL COUNT: 0", CANVAS_SIZE.x / 2, (CANVAS_SIZE.y / 2) - 15);
+                text("CIVILIAN KILL COUNT: " + this.killCount,  CANVAS_SIZE.x / 2, (CANVAS_SIZE.y / 2));
+                if (this.killCount > 0)
+                {
+                    text("Don't worry, we'll make sure the media doesn't find out.", CANVAS_SIZE.x / 2,  (CANVAS_SIZE.y / 2) + 15);
+                }
+            }
         pop();
     }
 }
@@ -251,11 +307,6 @@ function preload()
 {
     howy = new Howitzer();
     bg = loadImage("assets/howitzer/h_background.png");
-
-    for (var i = 1; i < 13; i++)
-    {
-        deathScreams[i] = loadSound("assets/sound/c_scream_" + (i < 10 ? "0" + i : i) + ".ogg");
-    }
 }
 
 function setup()
