@@ -5,5 +5,5 @@ dist/
 *.log
 
 *.fbx
-assetsrc/materials/
-assetsrc/town/
+assetsrc/
+*.zip

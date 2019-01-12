@@ -107,7 +107,6 @@ class Howitzer extends Interactable
         this.started = false;
         this.done = false;
 
-        //TODO: ADD MORE STATES TO THIS! Probably every 10 degrees
         this.sprites[0][0] = loadImage("assets/howitzer/h_5_normal.png");
         this.sprites[0][1] = loadImage("assets/howitzer/h_10_normal.png");
         this.sprites[0][2] = loadImage("assets/howitzer/h_20_normal.png");
@@ -273,11 +272,11 @@ class Howitzer extends Interactable
             else if (!this.done)
             {
                 text("TIME: " + this.countDownTimer.toFixed(0), 30, 15);
-                text("TARGET ANGLES: " + this.pitchYaw.yaw.toFixed(0) + " " + this.pitchYaw.pitch.toFixed(0), 30, 30);
+                text("TARGET: " + this.pitchYaw.yaw.toFixed(0) + " AZIMUTH, " + this.pitchYaw.pitch.toFixed(0) + " ELEVATION", 30, 30);
                 text("BODY COUNT: " + this.killCount, 30, 45);
                 var mx = (mouseX / resolutionScale) + 10;
-                text("Yaw: " + this.yaw.toFixed(0), mx, mouseY / resolutionScale);
-                text("Pitch: " + this.angle.toFixed(0), mx, (mouseY / resolutionScale) - 15);
+                text("Azimuth: " + this.yaw.toFixed(0), mx, mouseY / resolutionScale);
+                text("Elevation: " + this.angle.toFixed(0), mx, (mouseY / resolutionScale) - 15);
             }
             else
             {
